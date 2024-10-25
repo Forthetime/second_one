@@ -1,49 +1,109 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
 package ru.otus.chat.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-
 
 public class Server {
     private int port;
     private List<ClientHandler> clients;
+    private AuthenticatedProvider authenticatedProvider;
 
     public Server(int port) {
         this.port = port;
-        clients = new ArrayList<>();
+        this.clients = new ArrayList();
+        this.authenticatedProvider = new InMemoryAuthenticationProvider(this);
+        this.authenticatedProvider.initialize();
+    }
+
+    public AuthenticatedProvider getAuthenticatedProvider() {
+        return this.authenticatedProvider;
     }
 
     public void start() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Сервер запущен на порту: " + port);
-            while (true) {
-                Socket socket = serverSocket.accept();
-                subscribe(new ClientHandler(this, socket));
+        try {
+            ServerSocket serverSocket = new ServerSocket(this.port);
+
+            try {
+                System.out.println("Сервер запущен на порту: " + this.port);
+
+                while (true) {
+                    Socket socket = serverSocket.accept();
+                    new ClientHandler(this, socket);
+                }
+            } catch (Throwable var5) {
+                try {
+                    serverSocket.close();
+                } catch (Throwable var4) {
+                    var5.addSuppressed(var4);
+                }
+
+                throw var5;
             }
-        } catch (IOException e) {
+        } catch (IOException var6) {
+            IOException e = var6;
             e.printStackTrace();
         }
     }
 
     public synchronized void subscribe(ClientHandler clientHandler) {
-        clients.add(clientHandler);
+        this.clients.add(clientHandler);
     }
 
     public synchronized void unsubscribe(ClientHandler clientHandler) {
-        clients.remove(clientHandler);
+        this.clients.remove(clientHandler);
     }
 
-    public synchronized void broadcastMessage(String message) {
+    public synchronized void unsubscribeUser(String username) {
+        ClientHandler chosenToKick;
         for (ClientHandler client : clients) {
-            client.sendMessage(message);
+            if (client.getUsername().equals(username)) {
+                chosenToKick = client;
+                System.out.println(chosenToKick);
+                clients.remove(chosenToKick);
+            }
         }
     }
 
+    public synchronized void findByUsername(String username) {
+        ClientHandler findClient;
+        for (ClientHandler client : clients) {
+            if (client.getUsername().equals(username)) {
+                findClient=client;
+                return;
+            }
+        }
+    }
+
+    public synchronized boolean isAdmin(ClientHandler clienthandler) {
+        if (!clienthandler.getRole().equals(Roles.USER)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    public synchronized void broadcastMessage(String message) {
+        Iterator var2 = this.clients.iterator();
+
+        while (var2.hasNext()) {
+            ClientHandler client = (ClientHandler) var2.next();
+            client.sendMessage(message);
+        }
+
+    }
+
     public synchronized void personalMessage(String message, String username) {
-        ClientHandler chosen = null;
+        ClientHandler chosen;
         for (ClientHandler client : clients) {
             if (client.getUsername().equals(username)) {
                 chosen = client;
@@ -51,4 +111,23 @@ public class Server {
             }
         }
     }
+
+    public boolean isUsernameBusy(String username) {
+        Iterator var2 = this.clients.iterator();
+
+        ClientHandler client;
+        do {
+            if (!var2.hasNext()) {
+                return false;
+            }
+
+            client = (ClientHandler) var2.next();
+        } while (!client.getUsername().equals(username));
+
+        return true;
+    }
 }
+
+
+
+

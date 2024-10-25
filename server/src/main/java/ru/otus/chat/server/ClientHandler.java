@@ -1,8 +1,15 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
 package ru.otus.chat.server;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
-
+import java.util.Arrays;
 
 public class ClientHandler {
     private Server server;
@@ -10,10 +17,22 @@ public class ClientHandler {
     private DataInputStream in;
     private DataOutputStream out;
     private String username;
-    private static int userCount = 0;
+    private Roles role;
 
     public String getUsername() {
-        return username;
+        return this.username;
+    }
+
+    public void setRole(Roles role) {
+        this.role = role;
+    }
+
+    public Roles getRole() {
+        return this.role;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public ClientHandler(Server server, Socket socket) throws IOException {
@@ -21,12 +40,9 @@ public class ClientHandler {
         this.socket = socket;
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
-        userCount++;
-        username = "user" + userCount;
-
         new Thread(() -> {
             try {
-                System.out.println("Клиент " + username + " подключился ");
+                System.out.println("Клиент подключился ");
                 while (true) {
                     String message = in.readUTF();
                     if (message.startsWith("/")) {
@@ -34,17 +50,70 @@ public class ClientHandler {
                             sendMessage("/exitok");
                             break;
                         }
+                        // /auth login password
+                        if (message.startsWith("/auth ")) {
+                            String[] elements = message.split(" ");
+                            if (elements.length != 3) {
+                                sendMessage("Неверный формат команды /auth ");
+                                continue;
+                            }
+                            if (server.getAuthenticatedProvider()
+                                    .authenticate(this, elements[1], elements[2])) {
+                                break;
+                            }
+                            continue;
+                        }
+                        // /reg login password username
+                        if (message.startsWith("/reg ")) {
+                            String[] elements = message.split(" ");
+                            if (elements.length != 4) {
+                                sendMessage("Неверный формат команды /reg ");
+                                continue;
+                            }
+                            if (server.getAuthenticatedProvider()
+                                    .registration(this, elements[1], elements[2], elements[3])) {
+                                break;
+                            }
+                            continue;
+                        }
                     }
-                    if (message.contains("/w")) {
-                        String array[] = message.split(" ");
-                        String reciever = array[1];
-                        String personalMessage = array[2];
-                        server.personalMessage(personalMessage, reciever);
+                    sendMessage("Перед работой необходимо пройти аутентификацию командой " +
+                            "/auth login password или регистрацию командой /reg login password username");
+                }
+                System.out.println("Клиент " + username + " успешно прошел аутентификацию");
+                //цпкл работы
+                while (true) {
+                    String message = in.readUTF();
+                    ClientHandler client = server.findByUsername(this.username);
+                    if (message.startsWith("/")) {
+                        if (message.startsWith("/exit")) {
+                            sendMessage("/exitok");
+                            break;
+                        }
+                        if (message.contains("/w")) {
+                            String array[] = message.split(" ");
+                            String reciever = array[1];
+                            String personalMessage = array[2];
+                            server.personalMessage(this.username + " : " + personalMessage, reciever);
+                        }
+                        if (message.startsWith("/kick") && server.isAdmin(client) == true) {
+                            String kickmessageArray[] = message.split(" ");
+                            String userToKick = kickmessageArray[1];
+                            server.personalMessage(" Админ Вас удалил ", userToKick);
+                            server.unsubscribeUser(userToKick);
+//                            disconnect();  как разорвать сокет, in,out  именно userToKick
+                            server.broadcastMessage("Админ удалил" + userToKick);
+                        }
+                        if (message.startsWith("/kick") && server.isAdmin(client)  == false) {
+                            System.out.println("U r not admin");
+                        }
                     } else {
-                        server.broadcastMessage(username + " : " + message);
+                        server.broadcastMessage(this.username + " : " + message);
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException var7) {
+
+                IOException e = var7;
                 e.printStackTrace();
             } finally {
                 disconnect();
@@ -58,6 +127,7 @@ public class ClientHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     public void disconnect() {
