@@ -27,6 +27,7 @@ public class Client {
                         }
                         if (message.startsWith("/kickok")) {
                             System.out.println("Вы были удалены администратором");
+                            this.disconnect();
                             break;
                         }
                         if (message.startsWith("/authok ")) {
