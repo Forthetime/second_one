@@ -62,33 +62,23 @@ public class Server {
         this.clients.remove(clientHandler);
     }
 
-    public synchronized void unsubscribeUser(String username) {
-        ClientHandler chosenToKick;
-        for (ClientHandler client : clients) {
-            if (client.getUsername().equals(username)) {
-                chosenToKick = client;
-                System.out.println(chosenToKick);
-                clients.remove(chosenToKick);
-            }
-        }
-    }
-
-    public synchronized void findByUsername(String username) {
-        ClientHandler findClient;
+    public synchronized ClientHandler findByUsername(String username) {
+        ClientHandler findClient=null;
         for (ClientHandler client : clients) {
             if (client.getUsername().equals(username)) {
                 findClient=client;
-                return;
             }
         }
+        return findClient;
     }
 
     public synchronized boolean isAdmin(ClientHandler clienthandler) {
-        if (!clienthandler.getRole().equals(Roles.USER)) {
+        if (clienthandler.getRole().equals(Roles.ADMIN)) {
             return true;
-        } else {
+        } if (clienthandler.getRole().equals(Roles.USER)) {
             return false;
         }
+        else {return false;}
     }
 
 

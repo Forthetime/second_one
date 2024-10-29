@@ -25,6 +25,10 @@ public class Client {
                         if (message.startsWith("/exitok")) {
                             break;
                         }
+                        if (message.startsWith("/kickok")) {
+                            System.out.println("Вы были удалены администратором");
+                            break;
+                        }
                         if (message.startsWith("/authok ")) {
                             System.out.println("Аутентификация прошла успешно с именем пользователя: " +
                                     message.split(" ")[1]);
@@ -46,11 +50,10 @@ public class Client {
 
         while (true) {
             String message = scanner.nextLine();
-            out.writeUTF(message);
+                out.writeUTF(message);
             if (message.startsWith("/exit")) {
                 break;
             }
-
         }
     }
 

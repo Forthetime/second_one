@@ -84,8 +84,8 @@ public class ClientHandler {
                 //цпкл работы
                 while (true) {
                     String message = in.readUTF();
-                    ClientHandler client = server.findByUsername(this.username);
                     if (message.startsWith("/")) {
+                        ClientHandler client = server.findByUsername(this.username);
                         if (message.startsWith("/exit")) {
                             sendMessage("/exitok");
                             break;
@@ -98,14 +98,17 @@ public class ClientHandler {
                         }
                         if (message.startsWith("/kick") && server.isAdmin(client) == true) {
                             String kickmessageArray[] = message.split(" ");
-                            String userToKick = kickmessageArray[1];
-                            server.personalMessage(" Админ Вас удалил ", userToKick);
-                            server.unsubscribeUser(userToKick);
-//                            disconnect();  как разорвать сокет, in,out  именно userToKick
-                            server.broadcastMessage("Админ удалил" + userToKick);
+                            String userNameToKick = kickmessageArray[1];
+                            ClientHandler userToKick = server.findByUsername(userNameToKick);
+                            server.broadcastMessage("Админ удалил " + userNameToKick);
+                            server.personalMessage("/kickok", userNameToKick);
+                            userToKick.disconnect();
+                            continue;
                         }
-                        if (message.startsWith("/kick") && server.isAdmin(client)  == false) {
+                        if (message.startsWith("/kick") && server.isAdmin(client) == false) {
                             System.out.println("U r not admin");
+                            String authorName = this.username;
+                            server.personalMessage("U r not admin", authorName);
                         }
                     } else {
                         server.broadcastMessage(this.username + " : " + message);

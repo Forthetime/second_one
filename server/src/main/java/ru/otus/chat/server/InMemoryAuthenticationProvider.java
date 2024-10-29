@@ -16,10 +16,10 @@ public class InMemoryAuthenticationProvider implements AuthenticatedProvider {
     public InMemoryAuthenticationProvider(Server server) {
         this.server = server;
         this.users = new ArrayList();
-        this.users.add(new User("login1", "password1", "username1", Roles.USER));
-        this.users.add(new User("qwe", "qwe", "qwe1",Roles.USER));
-        this.users.add(new User("asd", "asd", "asd1",Roles.USER));
-        this.users.add(new User("zxc", "zxc", "zxc1",Roles.ADMIN));
+        this.users.add(new User("login1", "password1", "username1", Roles.ADMIN));
+        this.users.add(new User("qwe", "qwe", "qwe1", Roles.ADMIN));
+        this.users.add(new User("asd", "asd", "asd1", Roles.ADMIN));
+        this.users.add(new User("zxc", "zxc", "zxc1", Roles.ADMIN));
     }
 
     public void initialize() {
@@ -51,6 +51,7 @@ public class InMemoryAuthenticationProvider implements AuthenticatedProvider {
             return false;
         } else {
             clientHandler.setUsername(authName);
+            clientHandler.setRole(Roles.ADMIN);
             this.server.subscribe(clientHandler);
             clientHandler.sendMessage("/authok " + authName);
             return true;
@@ -119,7 +120,7 @@ public class InMemoryAuthenticationProvider implements AuthenticatedProvider {
             this.login = login;
             this.password = password;
             this.username = username;
-            this.role=role;
+            this.role = role;
         }
     }
 }
