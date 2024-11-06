@@ -7,6 +7,7 @@ package ru.otus.chat.server;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
@@ -40,6 +41,7 @@ public class ClientHandler {
         this.socket = socket;
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
+
         new Thread(() -> {
             try {
                 System.out.println("Клиент подключился ");
@@ -99,21 +101,20 @@ public class ClientHandler {
                         if (message.startsWith("/kick") && server.isAdmin(client) == true) {
                             String kickmessageArray[] = message.split(" ");
                             String userNameToKick = kickmessageArray[1];
-                            ClientHandler userToKick = server.findByUsername(userNameToKick);
-                            server.broadcastMessage("Админ удалил " + userNameToKick);
+                            server.broadcastMessage("Администратор удалил " + userNameToKick);
                             server.personalMessage("/kickok", userNameToKick);
-                            userToKick.disconnect();
-                            continue;
                         }
                         if (message.startsWith("/kick") && server.isAdmin(client) == false) {
-                            System.out.println("U r not admin");
                             String authorName = this.username;
-                            server.personalMessage("U r not admin", authorName);
+                            server.personalMessage("Отключать от чата могут только администраторы", authorName);
                         }
                     } else {
                         server.broadcastMessage(this.username + " : " + message);
                     }
                 }
+
+            } catch (EOFException e) {
+                System.out.println(username + " отключен от чата");
             } catch (IOException var7) {
 
                 IOException e = var7;

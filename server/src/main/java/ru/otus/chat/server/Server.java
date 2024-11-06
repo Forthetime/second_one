@@ -63,10 +63,10 @@ public class Server {
     }
 
     public synchronized ClientHandler findByUsername(String username) {
-        ClientHandler findClient=null;
+        ClientHandler findClient = null;
         for (ClientHandler client : clients) {
             if (client.getUsername().equals(username)) {
-                findClient=client;
+                findClient = client;
             }
         }
         return findClient;
@@ -75,10 +75,12 @@ public class Server {
     public synchronized boolean isAdmin(ClientHandler clienthandler) {
         if (clienthandler.getRole().equals(Roles.ADMIN)) {
             return true;
-        } if (clienthandler.getRole().equals(Roles.USER)) {
+        }
+        if (clienthandler.getRole().equals(Roles.USER)) {
+            return false;
+        } else {
             return false;
         }
-        else {return false;}
     }
 
 
@@ -117,7 +119,3 @@ public class Server {
         return true;
     }
 }
-
-
-
-

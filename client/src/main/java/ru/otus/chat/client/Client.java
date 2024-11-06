@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Scanner;
 
 public class Client {
@@ -26,8 +27,7 @@ public class Client {
                             break;
                         }
                         if (message.startsWith("/kickok")) {
-                            System.out.println("Вы были удалены администратором");
-                            this.disconnect();
+                            out.writeUTF("/exit");
                             break;
                         }
                         if (message.startsWith("/authok ")) {
@@ -50,9 +50,14 @@ public class Client {
         }).start();
 
         while (true) {
-            String message = scanner.nextLine();
+            try {
+                String message = scanner.nextLine();
                 out.writeUTF(message);
-            if (message.startsWith("/exit")) {
+                if (message.startsWith("/exit")) {
+                    break;
+                }
+            } catch (IOException e) {
+                System.out.println("Соединение с сервером разорвано");
                 break;
             }
         }
