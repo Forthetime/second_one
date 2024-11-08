@@ -1,9 +1,11 @@
 package ru.otus.chat.client;
 
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Scanner;
 
 public class Client {
@@ -11,13 +13,11 @@ public class Client {
     DataInputStream in;
     DataOutputStream out;
 
-
     public Client() throws IOException {
         Scanner scanner = new Scanner(System.in);
         socket = new Socket("localhost", 8189);
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
-
         new Thread(() -> {
             try {
                 while (true) {
@@ -25,6 +25,18 @@ public class Client {
                     if (message.startsWith("/")) {
                         if (message.startsWith("/exitok")) {
                             break;
+                        }
+                        if (message.startsWith("/kickok")) {
+                            out.writeUTF("/exit");
+                            break;
+                        }
+                        if (message.startsWith("/authok ")) {
+                            System.out.println("Аутентификация прошла успешно с именем пользователя: " +
+                                    message.split(" ")[1]);
+                        }
+                        if (message.startsWith("/regok ")) {
+                            System.out.println("регистрация прошла успешно с именем пользователя: " +
+                                    message.split(" ")[1]);
                         }
                     } else {
                         System.out.println(message);
@@ -38,9 +50,14 @@ public class Client {
         }).start();
 
         while (true) {
-            String message = scanner.nextLine();
-            out.writeUTF(message);
-            if (message.startsWith("/exit")) {
+            try {
+                String message = scanner.nextLine();
+                out.writeUTF(message);
+                if (message.startsWith("/exit")) {
+                    break;
+                }
+            } catch (IOException e) {
+                System.out.println("Соединение с сервером разорвано");
                 break;
             }
         }
@@ -64,3 +81,5 @@ public class Client {
         }
     }
 }
+
+
